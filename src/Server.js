@@ -8,7 +8,7 @@ const server=createServer(App);
 // const server1=createServer(App);
 // const server2=createServer(App);
 // const server3=createServer(App);
-new ConfigSocket(server);
+// new ConfigSocket(server);
 
 const port=process.env.PORT||3000;
 
