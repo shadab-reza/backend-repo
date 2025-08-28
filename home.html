@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <h1>Query Db</h1>
+
+    <form id="query-form">
+        <textarea id="query" cols="100" rows="5">select * from user_info;select * from user_info;</textarea><br>
+        <input type="submit" value="Execute">
+        <input type="reset" value="reset">
+    </form>
+
+    <h2>Query Response</h2>
+    <input type="text" id="key" onchange="extract()" placeholder="search a key in response...."> <br>
+    <button onclick="clearResponse()">Clear</button>
+    <details open>
+        <summary>Responses</summary>
+        <div id="result"></div>
+    </details>
+
+
+
+</body>
+
+<script>
+
+    const query = document.getElementById("query");
+    const p = document.getElementById("result");
+    const key = document.getElementById("key");
+    let response;
+    document.getElementById("query-form")
+        .addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            // console.log(query);
+
+            if (query.value) {
+                Execute(query.value);
+            }
+
+        });
+
+    function Execute(query) {
+        console.log(query);
+
+        let myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+
+        // let query = `select * from account_type;`
+        // let query=`insert into account_type(account_type) values ('test');`
+        // let query=`drop table account_typenew4;`;
+        // let query=`CREATE TABLE IF NOT EXISTS public.account_type
+        // (
+        //     account_type_id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1001 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+        //     account_type character varying COLLATE pg_catalog."default" NOT NULL
+        // );`;
+
+        const raw = JSON.stringify({
+            "query": query
+        });
+
+        const requestOptions = {
+            method: "POST",
+            headers: myHeaders,
+            body: raw,
+            redirect: "follow"
+        };
+
+        // let uri = "http://localhost:3000/execute";
+        let uri = "https://mhtmobile.api.nishathealthcare.com/execute";
+
+        fetch(uri, requestOptions)
+            // .then((response) => response.text())
+            .then((response) => response.json())
+            .then((result) => {
+                console.log(result);
+                response = result;
+                display();
+            })
+            .catch((error) => console.error(error));
+
+    }
+
+    function extract() {
+        if (response && key.value) {
+
+            let value = { ...response };
+
+            let keys = key.value.split(" ");
+
+            for (const key of keys) {
+                value = value[key];
+            }
+            if (value) {
+                p.innerText = JSON.stringify(value);
+            } else {
+                display();
+            }
+        } else {
+            display();
+        }
+    }
+
+    function display() {
+
+        p.innerText = JSON.stringify(response);
+
+        // const ul=document.createElement("ul");
+        // ul.style.listStyleType='none';
+        // const li=document.createElement("li");
+        // p.appendChild(ul);
+        
+
+        // for (const key in response) {
+        //     let value=response[key];
+
+        //     if(typeof value=="object"){
+        //         li.innerHTML="${key}:${value}";
+        //         console.log(li.innerHTML);
+                
+        //         ul.appendChild(li);
+        //     }
+        // }
+       
+     
+
+
+        // const body = document.body,
+        //     tbl = document.createElement('table'); 
+
+
+        // for (let i = 0; i < 3; i++) {
+        //     const tr = tbl.insertRow();
+        //     for (let j = 0; j < 2; j++) {
+        //         if (i === 2 && j === 1) {
+        //             break;
+        //         } else {
+        //             const td = tr.insertCell();
+        //             td.appendChild(document.createTextNode(`Cell I${i}/J${j}`));
+        //             td.style.border = '1px solid black';
+        //             if (i === 1 && j === 1) {
+        //                 td.setAttribute('rowSpan', '2');
+        //             }
+        //         }
+        //     }
+        // }
+        // body.appendChild(tbl);
+    }
+
+    function clearResponse() {
+        console.log('clearing response...');
+
+        p.innerText = '';
+        response = '';
+    }
+
+</script>
+
+</html>
