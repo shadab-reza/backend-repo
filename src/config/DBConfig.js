@@ -1,6 +1,10 @@
+// const { mapconfigs } = require('./instances-config');
 const { Pool } = require('pg');
-const env = require('dotenv')
-env.config();
+const env = require('dotenv').config();
+const { log } = require('../utils/loggerutil');
+const mapconfigs = new Map();
+
+const isProduction = process.env.env === 'prod';
 
 const response = {
     status: 400,
@@ -10,29 +14,63 @@ const response = {
 
 class DbConfig {
 
+    defaultPool = 'defaultPool';
+    cureentPoolId = '';
     constructor() {
-        // console.log(process.env.user);
-        // console.log(process.env.host);
-        // console.log(process.env.database);
-        // console.log(process.env.dbpassword);
-        // console.log(process.env.dbport);
-
-        this.pool = this.initPGClient()
+        this.poolMap = new Map();
+        this.initClients();
     }
 
-    initPGClient() {
-        return new Pool({
-            user: process.env.user,
-            host: process.env.host,
-            database: process.env.database,
-            password: process.env.dbpassword,
-            port: parseInt(process.env.dbport),
-            idleTimeoutMillis: 30000,      // close idle clients after 30 seconds
-            connectionTimeoutMillis: 2000, //
-            ssl: {
-                rejectUnauthorized: false // or set to true if you have certs
+    async initClients() {
+
+        try {
+
+            this.pool = this.initPool({ ...process.env, port: process.env.dbport });
+            this.poolMap.set(this.defaultPool, this.pool);
+
+            const res = await this.fetchRows('customers', []);
+
+            if (res.status == 200) {
+                res.data.forEach((customer) => {
+                    mapconfigs.set(customer.id, customer);
+                    this.poolMap.set(customer.id, this.initPool(customer.config));
+                });
+            } else {
+                log('failed to load clients.');
             }
+        } catch (error) {
+            log(error);
+            console.log(error);
+
+        }
+    }
+
+    initPool(value) {
+        return new Pool({
+            user: value.user,
+            host: value.host,
+            database: value.database,
+            password: value.password,
+            port: parseInt(value.port),
+            idleTimeoutMillis: 30000,      // close idle clients after 30 seconds
+            connectionTimeoutMillis: 4000, //
+            ssl: isProduction
+                ? {
+                    rejectUnauthorized: false, // for self-signed certs
+                }
+                : false,
         });
+    }
+
+    initClient(client) {
+        log("Initializing PG client for appid:" + client);
+
+        try {
+            this.pool = this.poolMap.get(client.replace(/"/g, ''));
+            this.cureentPoolId=client;
+        } catch (error) {
+            return { status: 400, info: 'Invalid client appid!' };
+        }
 
     }
 
@@ -172,10 +210,7 @@ class DbConfig {
                 })
             }
 
-            console.log(query);
-
             let res = await this.pool.query(query)
-            console.log(res.rowCount);
 
             if (!res || !res.rowCount < 0) {
                 return this.sendResult(400, 'Failed to fetch!');
@@ -183,6 +218,8 @@ class DbConfig {
             return this.sendResult(200, 'success', res.rows);
         } catch (error) {
             console.log(error);
+        } finally {
+
         }
         return response;
     }
@@ -304,9 +341,10 @@ class DbConfig {
 
 }
 
+
 const pgClient = new DbConfig();
 module.exports = {
-    pgClient
+    pgClient, mapconfigs
 }
 
 

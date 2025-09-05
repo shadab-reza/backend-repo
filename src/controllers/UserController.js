@@ -3,22 +3,17 @@ const { userService } =require('../services/UserService');
 class UserController {
 
     async login(req , res ) {
-        console.log(req.body);
-        
         let result = await userService.loginService(req.body);
-        console.log(result);
         res.status(result.status).send(result);
     }
 
     async userLogin(req , res ) {
         let result = await userService.userLoginService(req.body);
         // console.log(result);
-        res.status(result.status).send(result);
+        res.status(result.status).send({...result,statusCode:result.status});
     }
 
     async addUser(req , res ) {
-        console.log(req.body);
-        
         let status = await userService.addUser(req.body);
         res.send(status);
     }

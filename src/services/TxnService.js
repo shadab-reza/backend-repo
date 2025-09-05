@@ -36,7 +36,6 @@ class TxnService {
         let response = {},result;
         try {
             
-            console.log(data);
 
             const {userid,page,size} = data;          
             const offset=(page-1)*size;

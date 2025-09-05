@@ -1,64 +1,58 @@
-CREATE TABLE IF NOT EXISTS public.user_task
-(
-    task_id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1000 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
-    task_detail character varying COLLATE pg_catalog."default" NOT NULL,
-    task_duration character varying COLLATE pg_catalog."default",
-    task_status character varying COLLATE pg_catalog."default" NOT NULL,
-    created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    user_id integer NOT NULL,
-    CONSTRAINT user_task_pkey PRIMARY KEY (task_id)
+CREATE OR REPLACE FUNCTION encode_base62(input BYTEA) RETURNS TEXT AS $$
+DECLARE
+    chars TEXT := '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    base INT := 62;
+    num NUMERIC := 0;
+    result TEXT := '';
+    i INT;
+BEGIN
+    -- Convert bytea input to a big number
+    FOR i IN 0 .. length(input) - 1 LOOP
+        num := num * 256 + get_byte(input, i);
+    END LOOP;
+
+    -- Convert number to base62
+    IF num = 0 THEN
+        RETURN substr(chars, 1, 1);
+    END IF;
+
+    WHILE num > 0 LOOP
+        result := substr(chars, (mod(num, base) + 1)::INT, 1) || result;
+        num := floor(num / base);
+    END LOOP;
+
+    RETURN result;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+
+CREATE OR REPLACE FUNCTION generate_random_alphanum_id() RETURNS TEXT AS $$
+DECLARE
+    raw BYTEA;
+    code TEXT;
+BEGIN
+    LOOP
+        -- Generate 8 random bytes (~64 bits)
+        raw := gen_random_bytes(8);
+
+        -- Encode as base62 and left-pad to 10 characters
+        code := lpad(encode_base62(raw), 10, '0');
+
+        -- Optionally check for uniqueness in a table here
+        -- EXIT WHEN NOT EXISTS (SELECT 1 FROM your_table WHERE id = code);
+
+        RETURN code;
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql VOLATILE;
+
+
+CREATE TABLE users (
+    id TEXT PRIMARY KEY DEFAULT generate_random_alphanum_id(),
+    name TEXT NOT NULL
 );
 
-INSERT INTO public.user_task(
-	task_detail, task_duration, task_status,  user_id)
-	VALUES ('task detail','1 hr','pending',1);
-
-    CREATE TABLE IF NOT EXISTS public.user_info
-(
-    user_id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1000 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
-    full_name character varying COLLATE pg_catalog."default" NOT NULL,
-    password character varying COLLATE pg_catalog."default" NOT NULL,
-    email character varying COLLATE pg_catalog."default" NOT NULL,
-    phone character varying COLLATE pg_catalog."default" NOT NULL DEFAULT 134567890,
-    address character varying COLLATE pg_catalog."default",
-    auth_role json NOT NULL,
-    CONSTRAINT employee_pkey PRIMARY KEY (user_id)
-);
+INSERT INTO users (name) VALUES ('Alice'), ('Bob');
 
 
-CREATE TABLE IF NOT EXISTS public.account_type
-(
-    account_type_id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1001 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
-    account_type character varying COLLATE pg_catalog."default" NOT NULL,
-    CONSTRAINT branch_pkey PRIMARY KEY (account_type_id)
-);
-
-CREATE TABLE IF NOT EXISTS public.transactions
-(
-    txn_id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 10 START 10000 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
-    txn_type character varying COLLATE pg_catalog."default" NOT NULL,
-    amount double precision NOT NULL,
-    to_from character varying COLLATE pg_catalog."default" NOT NULL,
-    created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    location character varying COLLATE pg_catalog."default" NOT NULL,
-    remarks character varying COLLATE pg_catalog."default",
-    account_id integer NOT NULL,
-    created_by integer NOT NULL,
-    CONSTRAINT account_id_fkey FOREIGN KEY (account_id)
-        REFERENCES public.account_type (account_type_id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
-        NOT VALID
-);
-
-CREATE TABLE IF NOT EXISTS public.user_login_log
-(
-	log_id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1000 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
-	user_id integer NOT NULL,
-	action character varying COLLATE pg_catalog."default" NOT NULL,
-	created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	CONSTRAINT user_login_log_pkey PRIMARY KEY (log_id)
-);
-
--- index to speed up queries by user and time
-CREATE INDEX IF NOT EXISTS idx_user_login_log_user_time ON public.user_login_log (user_id, created_at);
+SELECT * FROM users;
