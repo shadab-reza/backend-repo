@@ -13,9 +13,10 @@
     "socket.io": "^4.7.5"
   },
   "scripts": {
-    "start": "nodemon src/Server.js"
+    "start": "node src/Server.js",
+    "dev": "nodemon src/Server.js"
   },
-  "name": "madarsa",
+  "name": "backend-repo",
   "description": "��#\u0000 \u0000i\u0000f\u0000o\u0000r\u0000t\u0000r\u0000e\u0000s\u0000s\u0000-\u0000b\u0000a\u0000c\u0000k\u0000e\u0000n\u0000d\u0000\r\u0000 \u0000",
   "version": "1.0.0",
   "main": "server.js",
