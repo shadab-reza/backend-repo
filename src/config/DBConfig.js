@@ -25,13 +25,19 @@ class DbConfig {
 
         try {
 
-            this.pool = this.initPool({ ...process.env, port: process.env.dbport });
-            this.poolMap.set(this.defaultPool, this.pool);
+            if (this.poolMap.has(this.defaultPool)) {
+                this.pool = this.poolMap.get(this.defaultPool);
+            } else {
+                this.pool = this.initPool({ ...process.env, port: process.env.dbport });
+                this.poolMap.set(this.defaultPool, this.pool);
+            }
 
             const res = await this.fetchRows('customers', []);
 
             if (res.status == 200) {
                 res.data.forEach((customer) => {
+                    console.log(customer.id);
+                    // console.log(customer.config);                    
                     mapconfigs.set(customer.id, customer);
                     this.poolMap.set(customer.id, this.initPool(customer.config));
                 });
@@ -67,7 +73,7 @@ class DbConfig {
 
         try {
             this.pool = this.poolMap.get(client.replace(/"/g, ''));
-            this.cureentPoolId=client;
+            this.cureentPoolId = client;
         } catch (error) {
             return { status: 400, info: 'Invalid client appid!' };
         }
@@ -101,7 +107,7 @@ class DbConfig {
                 // console.log(query);
                 queries += query;
             })
-            console.log(queries);
+            log(queries);
         } catch (error) {
             console.log(error);
         }
@@ -149,7 +155,7 @@ class DbConfig {
                 queries += query;
             })
 
-            console.log(queries);
+            log(queries);
 
 
         } catch (error) {

@@ -122,11 +122,11 @@ class UserService {
                     })
                     .catch((err) => {
                         console.log(err);
-                        return { status: 400, info: 'failed to update allowed users' };
+                        return { status: 400, info: 'failed to update users counter.' };
                     });
 
             } else {
-                return { status: 400, info: 'allowed users limit exceededing.' };
+                return { status: 400, info: 'max users limit exceededing.' };
             }
         } else {
             return { status: 400, info: 'customer id not exist.' };

@@ -9,7 +9,7 @@ const { taskRoutes } = require('./routes/TaskRoutes');
 const { workReportRoutes } = require('./routes/WorkReportRoutes');
 const { secureRoutes } = require('./routes/DbRoutes');
 const { loginLogRoutes } = require('./routes/LoginLogRoutes');
-const { licenseRoutes } = require('./routes/license-routes');
+const { customerRoutes } = require('./routes/Customer-routes');
 const routes = express.Router();
 
 routes.use(publicRoutes);
@@ -22,7 +22,7 @@ routes.use(taskRoutes);
 routes.use(workReportRoutes);
 routes.use(secureRoutes);
 routes.use(loginLogRoutes);
-routes.use(licenseRoutes);
+routes.use("/customer",customerRoutes);
 
 module.exports={
     routes

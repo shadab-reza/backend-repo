@@ -3,7 +3,7 @@ const { logrequest, log } = require('../utils/loggerutil');
 
 const appMiddleware = (req, res, next) => {
 
-    if (req.path === '/validate-license') {
+    if (req.path.startsWith('/customer/')) {
         return next();
     }
 
