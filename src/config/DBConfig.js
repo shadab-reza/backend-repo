@@ -14,7 +14,7 @@ const response = {
 
 class DbConfig {
 
-    defaultPool = 'defaultPool';
+    defaultPool = 'DEMOAPPKEY';
     cureentPoolId = '';
     constructor() {
         this.poolMap = new Map();
