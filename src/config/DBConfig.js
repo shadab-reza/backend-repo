@@ -14,9 +14,10 @@ const response = {
 
 class DbConfig {
 
-    defaultPool = 'defaultPool';
-    cureentPoolId = '';
+    
     constructor() {
+        this.defaultPool = 'DEMOAPPKEY';
+        this.cureentPoolId = '';
         this.poolMap = new Map();
         this.initClients();
     }
@@ -28,7 +29,9 @@ class DbConfig {
             if (this.poolMap.has(this.defaultPool)) {
                 this.pool = this.poolMap.get(this.defaultPool);
             } else {
-                this.pool = this.initPool({ ...process.env, port: process.env.dbport });
+                const defaultPoolConfig = { ...process.env, port: process.env.dbport }
+                this.pool = this.initPool(defaultPoolConfig);
+                mapconfigs.set(this.defaultPool, defaultPoolConfig);
                 this.poolMap.set(this.defaultPool, this.pool);
             }
 
