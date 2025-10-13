@@ -6,9 +6,10 @@ const txnRoutes = express.Router();
 
 // userRoutes.use(authService.authenticate)
 
-txnRoutes.get('/txn',txnController.getTxns)
-txnRoutes.post('/txn',txnController.addTxn)
-txnRoutes.delete('/txn',txnController.deleteTxn)
+txnRoutes.get('/txn',txnController.getTxns);
+txnRoutes.post('/txn',txnController.addTxn);
+txnRoutes.post('/txn/verify',txnController.verifyTxn);
+txnRoutes.delete('/txn',txnController.deleteTxn);
 
 module.exports= {
     txnRoutes

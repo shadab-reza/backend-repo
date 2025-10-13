@@ -3,7 +3,7 @@ const { pgClient } = require("../config/DBConfig");
 const encrypt = require("../config/Encrypt");
 const { jsonToken } = require("../utils/TokenService");
 const entity = 'transactions';
-const {userService}=require('./UserService');
+const { userService } = require('./UserService');
 class TxnService {
 
 
@@ -16,7 +16,7 @@ class TxnService {
     async addTxn(data) {
         // console.log(data);
         try {
-         
+
             // data.roles = JSON.stringify(data.roles);
             let dataMap = this.getDataMap(data);
             // console.log(dataMap);
@@ -33,40 +33,40 @@ class TxnService {
     }
 
     async getTxns(data) {
-        let response = {},result;
+        let response = {}, result;
         try {
-            
 
-            const {userid,page,size} = data;          
-            const offset=(page-1)*size;
-            const res=await userService.isAdminUser(data);
 
-            if(res.isadmin){
-            const query=`select t.txn_id,t.created_by,to_char(t.created_at, 'YYYY-MM-DD HH24:MI') as created_at,t.to_from,t.txn_type,t.amount,t.location,t.remarks
-            ,a.account_type from ${entity} t
+            const { userid, page, size } = data;
+            const offset = (page - 1) * size;
+            const res = await userService.isAdminUser(data);
+
+            if (res.isadmin) {
+                const query = `select t.txn_id,t.created_by,to_char(t.created_at, 'YYYY-MM-DD HH24:MI') as created_at,t.to_from,t.txn_type,t.amount,t.location,t.remarks,
+            t.is_verified,a.account_type from ${entity} t
             join account_type a on a.account_type_id = t.account_id
             order by t.created_at asc limit $1 offset $2;`;
 
-            const [result1,result2]=await Promise.all([pgClient.executeWithValues(query, [size, offset]),pgClient.execute(`select count(*) as total from ${entity}`)]);
-            
-            result = result1;
-            result.total = parseInt(result2.data[0].total);
+                const [result1, result2] = await Promise.all([pgClient.executeWithValues(query, [size, offset]), pgClient.execute(`select count(*) as total from ${entity}`)]);
 
-            }else{
-            const query=`select t.txn_id,t.created_by,to_char(t.created_at, 'YYYY-MM-DD HH24:MI') as created_at,t.to_from,t.txn_type,t.amount,t.location,t.remarks
-            ,a.account_type from ${entity} t
+                result = result1;
+                result.total = parseInt(result2.data[0].total);
+
+            } else {
+                const query = `select t.txn_id,t.created_by,to_char(t.created_at, 'YYYY-MM-DD HH24:MI') as created_at,t.to_from,t.txn_type,t.amount,t.location,t.remarks,
+            t.is_verified,a.account_type from ${entity} t
             join account_type a on a.account_type_id = t.account_id where t.created_by=$1
             order by t.created_at asc limit $2 offset $3;`;
 
-            result = await pgClient.executeWithValues(query,[userid,size,offset]);
+                result = await pgClient.executeWithValues(query, [userid, size, offset]);
             }
 
             if (result.data) {
                 response.status = result.status;
                 response.data = result.data;
                 response.total = result.total;
-            }else{
-                response=result;
+            } else {
+                response = result;
             }
 
             // console.log(result);
@@ -77,11 +77,44 @@ class TxnService {
             response.status = 400;
             response.info = 'Bad Request!'
         }
-        
+
         return response;
     }
 
-   
+    async verifyTxn(data = {}) {
+        let response = {}, result;
+        try {
+
+            const res = await userService.isAdminUser({ userid: data.userid });
+            const txnIds = data.txnIds || [];
+            
+            if (res.isadmin) {
+                const query = `update ${entity} set is_verified=true where txn_id=any($1::int[]);`;
+                result = await pgClient.executeWithValues(query, [txnIds]);
+            }
+
+            if (result.data) {
+                response.status = result.status;
+                response.data = result.data;
+                response.total = result.total;
+            } else {
+                response = result;
+            }
+
+            // console.log(result);
+            // console.log(response);
+
+        } catch (error) {
+            console.log(error);
+            response.status = 400;
+            response.info = 'Bad Request!'
+        }
+
+        return response;
+
+    }
+
+
     async deleteTxn(data) {
         let response = {};
         try {

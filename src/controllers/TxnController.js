@@ -14,6 +14,12 @@ class TxnController {
         res.status(response.status).send(response);
     }
 
+       async verifyTxn(req , res ) {
+        let response = await txnService.verifyTxn({...req.body,...req.query});
+        // console.log(response);
+        res.status(response.status).send(response);
+    }
+
     async deleteTxn(req , res ) {
         let result = await txnService.deleteTxn(req.body);
         // console.log(result);

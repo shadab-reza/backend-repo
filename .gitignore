@@ -1,6 +1,7 @@
 node_modules
 .qodo
 logs/*.log
+*.zip
 
 # resources
 # .gitignore
